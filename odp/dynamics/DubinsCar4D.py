@@ -1,4 +1,5 @@
 import heterocl as hcl
+import numpy as np
 
 """ 4D DUBINS CAR DYNAMICS IMPLEMENTATION 
  x_dot = v * cos(theta) + d_1
@@ -119,3 +120,62 @@ class DubinsCar4D:
         theta_dot[0] = uOpt[1]
 
         return (x_dot[0], y_dot[0], v_dot[0] ,theta_dot[0])
+    
+    def optCtrl_inPython(self, spat_deriv):
+        """
+        :param spat_deriv: tuple of spatial derivative in all dimensions
+        :return: a tuple of optimal control
+        """
+        opt_a = self.uMax[0]
+        opt_w = self.uMax[1]
+        if self.uMode == "min":
+            if spat_deriv[2] > 0:
+                opt_a = self.uMin[0]
+            if spat_deriv[3] > 0:
+                opt_w = self.uMin[1]
+        else:
+            if spat_deriv[2] < 0:
+                opt_a = self.uMin[0]
+            if spat_deriv[3] < 0:
+                opt_w = self.uMin[1]
+        return (opt_a, opt_w)
+    
+    def optDstb_inPython(self, spat_deriv):
+        """
+        :param spat_deriv: tuple of spatial derivative in all dimensions
+        :return: a tuple of optimal disturbances
+        """
+        d1 = 0
+        d2 = 0
+        if self.dMode == "max":
+            if spat_deriv[0] > 0:
+                d1 = self.dMax[0]
+            elif spat_deriv[0] < 0:
+                d1 = self.dMin[0]
+            if spat_deriv[1] > 0:
+                d2 = self.dMax[1]
+            elif spat_deriv[1] < 0:
+                d2 = self.dMin[1]
+        else:
+            if spat_deriv[0] > 0:
+                d1 = self.dMin[0]
+            elif spat_deriv[0] < 0:
+                d1 = self.dMax[0]
+            if spat_deriv[1] > 0:
+                d2 = self.dMin[1]
+            elif spat_deriv[1] < 0:
+                d2 = self.dMax[1]
+        return (d1, d2)
+
+    def dynamics_python(self, state, uOpt, dOpt):
+        """
+        :param state: tuple of coordinates
+        :param uOpt: tuple of optimal control
+        :param dOpt: tuple of optimal disturbances
+        :return: a tuple of state derivatives
+        """
+        x_dot = state[2] * np.cos(state[3]) + dOpt[0]
+        y_dot = state[2] * np.sin(state[3]) + dOpt[1]
+        v_dot = uOpt[0]
+        theta_dot = uOpt[1]
+        return (x_dot, y_dot, v_dot, theta_dot)

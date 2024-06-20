@@ -87,9 +87,10 @@ def solveValueIteration(MDP_obj):
 
 def HJSolver(dynamics_obj, grid, multiple_value, tau, compMethod,
              plot_option, saveAllTimeSteps=False,
-             accuracy="low", untilConvergent=False, epsilon=2e-3):
+             accuracy="low", untilConvergent=False, epsilon=2e-3,
+             stay_in_interval=None, verbose=True):
 
-    print("Welcome to optimized_dp \n")
+    # print("Welcome to optimized_dp \n")
     if type(multiple_value) == list:
         # We have both goal and obstacle set
         target = multiple_value[0] # Target set
@@ -103,13 +104,12 @@ def HJSolver(dynamics_obj, grid, multiple_value, tau, compMethod,
 
     ################# INITIALIZE DATA TO BE INPUT INTO EXECUTABLE ##########################
 
-    print("Initializing\n")
-
+    # print("Initializing\n")
     if constraint is None:
-        print("No obstacles set !")
+        print("No obstacles set !") if verbose else None
         init_value = target
     else: 
-        print("Obstacles set exists !")
+        print("Obstacles set exists !") if verbose else None
         constraint_dim = constraint.ndim
 
         # Time-varying obstacle sets
@@ -184,7 +184,7 @@ def HJSolver(dynamics_obj, grid, multiple_value, tau, compMethod,
     if saveAllTimeSteps is True:
         valfuncs = np.zeros(np.insert(tuple(grid.pts_each_dim), grid.dims, len(tau)))
         valfuncs[..., -1 ] = V_0.asnumpy()
-        print(valfuncs.shape)
+        print(valfuncs.shape) if verbose else None
 
 
     ################ USE THE EXECUTABLE ############
@@ -192,7 +192,7 @@ def HJSolver(dynamics_obj, grid, multiple_value, tau, compMethod,
     execution_time = 0
     iter = 0
     tNow = tau[0]
-    print("Started running\n")
+    # print("Started running\n")
 
     # Backward reachable set/tube will be computed over the specified time horizon
     # Or until convergent ( which ever happens first )
@@ -203,6 +203,8 @@ def HJSolver(dynamics_obj, grid, multiple_value, tau, compMethod,
         # taking obstacle at each timestep
         if "ObstacleSetMode" in compMethod and constraint_dim > grid.dims:
             constraint_i = constraint[...,i]
+        elif "ObstacleSetMode" in compMethod and constraint_dim == grid.dims:
+            constraint_i = constraint
 
         while tNow <= tau[i] - 1e-4:
             prev_arr = V_0.asnumpy()
@@ -226,6 +228,17 @@ def HJSolver(dynamics_obj, grid, multiple_value, tau, compMethod,
 
             tNow = t_minh.asnumpy()[0]
 
+            #################
+            ## ADDED BY ME ##
+            #################
+            if stay_in_interval is not None:
+                if tNow >= stay_in_interval[0] and tNow <= stay_in_interval[1]:
+                    print("Stay in interval") if verbose else None
+                    if constraint_i is not None:
+                        constraint_i = np.minimum(constraint_i, -target)
+                    else:
+                        constraint_i = -target
+
             # Calculate computation time
             execution_time += time.time() - start
 
@@ -240,16 +253,16 @@ def HJSolver(dynamics_obj, grid, multiple_value, tau, compMethod,
                 # Update input for next iteration
                 V_0 = hcl.asarray(tmp_val)
 
-            # Some information printin
-            print(t_minh)
-            print("Computational time to integrate (s): {:.5f}".format(time.time() - start))
+            # # Some information printin
+            # print(t_minh)
+            # print("Computational time to integrate (s): {:.5f}".format(time.time() - start))
 
             if untilConvergent is True:
                 # Compare difference between V_{t-1} and V_{t} and choose the max changes
                 diff = np.amax(np.abs(V_1.asnumpy() - prev_arr))
-                print("Max difference between V_old and V_new : {:.5f}".format(diff))
+                print("Max difference between V_old and V_new : {:.5f}".format(diff)) if verbose else None
                 if diff < epsilon:
-                    print("Result converged ! Exiting the compute loop. Have a good day.")
+                    print("Result converged ! Exiting the compute loop. Have a good day.") if verbose else None
                     break
         else: # if it didn't break because of convergent condition
             if saveAllTimeSteps is True:
@@ -259,8 +272,8 @@ def HJSolver(dynamics_obj, grid, multiple_value, tau, compMethod,
 
 
     # Time info printing
-    print("Total kernel time (s): {:.5f}".format(execution_time))
-    print("Finished solving\n")
+    print("Solved. Total kernel time (s): {:.5f}".format(execution_time)) if verbose else None
+    # print("Finished solving\n")
 
     ##################### PLOTTING #####################
     if plot_option.do_plot :

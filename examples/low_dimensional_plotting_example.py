@@ -8,7 +8,7 @@ from odp.Shapes import *
 from odp.dynamics import DubinsCapture, Plane2D, Plane1D
 # Plot options
 from odp.Plots import PlotOptions
-from odp.Plots import plot_isosurface, plot_valuefunction, downsample
+from odp.Plots import plot_isosurface, plot_valuefunction #, downsample
 # Solver core
 from odp.solver import HJSolver, computeSpatDerivArray
 
@@ -59,7 +59,7 @@ po1 = PlotOptions(do_plot=False, plot_type="set", plotDims=[0,1,2])
 
 # STEP 6: Call HJSolver function
 compMethod = { "TargetSetMode": "None"}
-result_3 = HJSolver(sys, g, Initial_value_f, tau, compMethod, po1, saveAllTimeSteps=True)
+result_3 = HJSolver(sys, g, Initial_value_f, tau, compMethod, po1, saveAllTimeSteps=False)
 
 '''
 Test for downsample function
@@ -72,7 +72,7 @@ Test for downsample function
 
 
 # While file needs to be saved locally, set save_fig=True and filename, recommend to set interactive_html=True for better visualization
-po2 = PlotOptions(do_plot=False, plot_type="set", plotDims=[0,1,2],
+po2 = PlotOptions(do_plot=True, plot_type="set", plotDims=[0,1,2],
                   slicesCut=[1], colorscale="Bluered", save_fig=True, filename="plots/3D_0_sublevel_set", interactive_html=True)
 
 # STEP 6: Call Plotting function

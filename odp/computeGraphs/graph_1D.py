@@ -6,7 +6,7 @@ from odp.spatialDerivatives.second_orderENO1D import *
 
 #from user_definer import *
 #def graph_1D(dynamics_obj, grid):
-def graph_1D(my_object, g, compMethod, accuracy, generate_SpatDeriv=False, deriv_dim=1):
+def graph_1D(my_object, g, compMethod, accuracy, generate_SpatDeriv=False, deriv_dim=1, verbose=False):
     V_f = hcl.placeholder(tuple(g.pts_each_dim), name="V_f", dtype=hcl.Float())
     V_init = hcl.placeholder(tuple(g.pts_each_dim), name="V_init", dtype=hcl.Float())
     l0 = hcl.placeholder(tuple(g.pts_each_dim), name="l0", dtype=hcl.Float())
@@ -217,7 +217,7 @@ def graph_1D(my_object, g, compMethod, accuracy, generate_SpatDeriv=False, deriv
     if generate_SpatDeriv == False:
         s = hcl.create_schedule([V_f, V_init, x1, t, l0], graph_create)
         ##################### CODE OPTIMIZATION HERE ###########################
-        print("Optimizing\n")
+        print("Optimizing\n") if verbose else None
 
         # Accessing the hamiltonian and dissipation stage
         s_H = graph_create.Hamiltonian
@@ -227,7 +227,7 @@ def graph_1D(my_object, g, compMethod, accuracy, generate_SpatDeriv=False, deriv
         s[s_H].parallel(s_H.i)
         s[s_D].parallel(s_D.i)
     else:
-        print("I'm here\n")
+        print("I'm here\n") if verbose else None
         s = hcl.create_schedule([V_init, V_f], returnDerivative)
 
     # Inspect IR

@@ -17,6 +17,7 @@ class Grid:
         self.min = minBounds
         self.dims = len(pts_each_dim)
         self.pts_each_dim = pts_each_dim
+        self.N = self.pts_each_dim
         self.pDim = periodicDims
 
         # Exclude the upper bounds for periodic dimensions is not included 

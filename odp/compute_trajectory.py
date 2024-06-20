@@ -1,4 +1,8 @@
 import numpy as np
+try:
+    from utilities.utilities import isStateInsideContour
+except:
+    from utilities import isStateInsideContour
 
 
 def find_sign_change(grids, values, state, tau):
@@ -93,8 +97,9 @@ def next_position(dynamics, current_state, u, d, tstep):
     Returns:
         The new position.
     """
-    next_state = current_state + tstep * dynamics.dynamics_python(current_state, u, d)
-    return next_state
+    next_state_np = np.array(current_state) + tstep * np.array(dynamics.dynamics_python(current_state, u, d))
+    # next_state = current_state + tstep * dynamics.dynamics_python(current_state, u, d)
+    return next_state_np.tolist()
 
 
 def compute_opt_traj(dynamics, grids, values_all, tau, state):
@@ -131,11 +136,17 @@ def compute_opt_traj(dynamics, grids, values_all, tau, state):
 
     current_value = grids.get_value(values_all[..., 0], current_state) # here check whether the initial position is in the RAS V[..., 0]
     if current_value > 0:  
+        print("The initial position is not in the RAS.")
+        print("Value: ", current_value)
         values_all = values_all - current_value
+    else:
+        print("The initial position is in the RAS.")
     
     # calculate the time slice where the value changes from positive to negative
     negToPos, posToNeg = find_sign_change(grids, values_all, current_state, tau) 
     t_earliest = negToPos 
+    print("negToPos: ", negToPos)
+    print("posToNeg: ", posToNeg)
 
     for iter in range(0, len(tau)):
         if iter < t_earliest:
@@ -151,8 +162,16 @@ def compute_opt_traj(dynamics, grids, values_all, tau, state):
         # we should apply the control inputs to the agent
         negToPos, posToNeg = find_sign_change(grids, values_all, current_state, tau)
         n2p_log.append(negToPos)
+        # print("iter: ", iter)
+        # print("negToPos: ", negToPos)
 
-        if negToPos.size != 0:
+        # print("current_state: ", current_state)
+        # if isStateInsideContour(grids, values_all[:,:,int(grids.N[2]/2),int(grids.N[3]/2), -1], current_state):
+        #     print("Agent has arrived at the target (state in target contour).")
+        #     traj[iter:] = np.array(current_state)
+        #     continue
+
+        if True: #if negToPos.size != 0: # and iter <= negToPos[-1]+1:
             # the agent has not arrived at the target
             current_value = grids.get_value(values_all[..., iter], current_state)
             if current_value <= 0:  # the agent is within the BRT/BRS
@@ -187,9 +206,88 @@ def compute_opt_traj(dynamics, grids, values_all, tau, state):
             v_log.append(grids.get_value(values_all[..., iter], current_state))
             if iter != values_all.shape[-1]:
                 traj[iter] = np.array(current_state)
+            else:  
+                print("Agent has arrived at the target.")
+                # the agent has arrived at the target
+                traj[iter:] = np.array(current_state)
+
+    return traj, opt_u, opt_d, t
+
+
+def compute_continuous_opt_traj(dynamics, grids, values_all, tau, state):
+    assert values_all.shape[-1] == len(tau)
+    print(f"The number of steps is {len(tau)}.")
+    dt = tau[1] - tau[0]
+
+    current_state = state
+    traj = np.empty((values_all.shape[-1], len(state)))  # traj.shape = [len(tau), dim]
+    traj[0] = current_state  # dynamics.x
+    t_earliest = -1
+
+    opt_u = []
+    opt_d = []
+    t = []
+    t_earlist_log = []
+    v_log = []
+    n2p_log = []
+
+    current_value = grids.get_value(values_all[..., 0], current_state) # here check whether the initial position is in the RAS V[..., 0]
+    if current_value > 0:  
+        print("The initial position is not in the RAS.")
+        print("Value: ", current_value)
+        values_all = values_all - current_value
+    else:
+        print("The initial position is in the RAS.")
+    
+    # calculate the time slice where the value changes from positive to negative
+    negToPos, posToNeg = find_sign_change(grids, values_all, current_state, tau) 
+    t_earliest = negToPos 
+    print("negToPos: ", negToPos)
+    print("posToNeg: ", posToNeg)
+
+    for iter in range(0, len(tau)):
+        # always use the value function for control, as it is guaranteed to work for the time-range and disturbance level        
+        # we should apply the control inputs to the agent
+        negToPos, posToNeg = find_sign_change(grids, values_all, current_state, tau)
+        n2p_log.append(negToPos)
+
+        # the agent has not arrived at the target
+        current_value = grids.get_value(values_all[..., iter], current_state)
+        if current_value <= 0:  # the agent is within the BRT/BRS
+            for value in negToPos:
+                if value >= iter:
+                    t_earliest = value
+                    break
+        else:
+            for value in reversed(negToPos):
+                if value <= iter:
+                    t_earliest = value
+                    break
+
+        t.append(tau[iter])
+        t_next = t_earliest + 1
+
+        if t_next > values_all.shape[-1] - 1:
+            t_next = values_all.shape[-1] - 1
+
+        # calculate the control inputs
+        values = values_all[..., [t_earliest]]
+        spat_deriv_vector = spa_deriv(grids.get_index(current_state), values, grids)
+        current_u = dynamics.optCtrl_inPython(spat_deriv_vector)
+        current_d = dynamics.optDstb_inPython(spat_deriv_vector)
+        opt_u.append(current_u)
+        opt_d.append(current_d)
+
+        # apply the control and update the current_state
+        next_state = next_position(dynamics, current_state, current_u, current_d, dt)
+        current_state = next_state
+        t_earlist_log.append(t_earliest)
+        v_log.append(grids.get_value(values_all[..., iter], current_state))
+        if iter != values_all.shape[-1]:
+            traj[iter] = np.array(current_state)
         else:  
+            print("Agent has arrived at the target.")
             # the agent has arrived at the target
             traj[iter:] = np.array(current_state)
-            break
 
     return traj, opt_u, opt_d, t

@@ -33,15 +33,36 @@ class DubinsCar:
         d2 = hcl.scalar(0, "d2")
         # Just create and pass back, even though they're not used
         d3 = hcl.scalar(0, "d3")
+
+        if self.dMode == "max":
+            with hcl.if_(spat_deriv[0] > 0):
+                d1[0] = self.dMax
+            with hcl.elif_(spat_deriv[0] < 0):
+                d1[0] = -self.dMax
+            with hcl.if_(spat_deriv[1] > 0):
+                d2[0] = self.dMax
+            with hcl.elif_(spat_deriv[1] < 0):
+                d2[0] = -self.dMax
+        else:
+            with hcl.if_(spat_deriv[0] > 0):
+                d1[0] = -self.dMax
+            with hcl.elif_(spat_deriv[0] < 0):
+                d1[0] = self.dMax
+            with hcl.if_(spat_deriv[1] > 0):
+                d2[0] = -self.dMax
+            with hcl.elif_(spat_deriv[1] < 0):
+                d2[0] = self.dMax
+            
         return (d1[0], d2[0], d3[0])
+
 
     def dynamics(self, t, state, uOpt, dOpt):
         x_dot = hcl.scalar(0, "x_dot")
         y_dot = hcl.scalar(0, "y_dot")
         theta_dot = hcl.scalar(0, "theta_dot")
 
-        x_dot[0] = self.speed*hcl.cos(state[2])
-        y_dot[0] = self.speed*hcl.sin(state[2])
+        x_dot[0] = self.speed*hcl.cos(state[2]) + dOpt[0]
+        y_dot[0] = self.speed*hcl.sin(state[2]) + dOpt[1]
         theta_dot[0] = uOpt[0]
 
         return (x_dot[0], y_dot[0], theta_dot[0])

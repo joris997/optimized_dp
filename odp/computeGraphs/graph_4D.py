@@ -5,7 +5,7 @@ from odp.spatialDerivatives.first_orderENO4D import *
 from odp.spatialDerivatives.second_orderENO4D import *
 
 ########################## 4D Graph definition #################################
-def graph_4D(my_object, g, compMethod, accuracy, generate_SpatDeriv=False, deriv_dim=1):
+def graph_4D(my_object, g, compMethod, accuracy, generate_SpatDeriv=False, deriv_dim=1, verbose=False):
     V_f = hcl.placeholder(tuple(g.pts_each_dim), name="V_f", dtype=hcl.Float())
     V_init = hcl.placeholder(tuple(g.pts_each_dim), name="V_init", dtype=hcl.Float())
     l0 = hcl.placeholder(tuple(g.pts_each_dim), name="l0", dtype=hcl.Float())
@@ -389,7 +389,7 @@ def graph_4D(my_object, g, compMethod, accuracy, generate_SpatDeriv=False, deriv
         s = hcl.create_schedule([V_f, V_init, x1, x2, x3, x4, t, l0, probe], graph_create)
 
         ##################### CODE OPTIMIZATION HERE ###########################
-        print("Optimizing\n")
+        print("Optimizing\n") if verbose else None
 
         # Accessing the hamiltonian and dissipation stage
         s_H = graph_create.Hamiltonian

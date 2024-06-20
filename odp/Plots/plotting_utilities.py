@@ -21,7 +21,9 @@ def plot_isosurface(grid, V_ori, plot_option):
         mg_X, mg_Y, mg_Z = np.mgrid[grid.min[dim1]:grid.max[dim1]: complex_x, grid.min[dim2]:grid.max[dim2]: complex_y,
                            grid.min[dim3]:grid.max[dim3]: complex_z]
 
-        my_V = V[tuple(idx)]
+        idx=0
+        # my_V = V[tuple(idx)]
+        my_V = V
 
         if (my_V > 0.0).all():
             print("Implicit surface will not be shown since all values are positive ")
@@ -564,3 +566,47 @@ def downsample(g, data, scale):
 
     return g_out, data_out
        
+
+
+def plot_target(ax,g,data,proj_dims,proj_values,text="",linestyle='-',color='k'):
+    # Plot the set in an already existing figure axes. Project into the proj_dims (should be size g.N, 1 indicates project)
+    # for the other dimensions, find the index closest to proj_values[i] and plot that slice
+
+    assert(len(proj_dims) == len(proj_values))
+
+    # get the index of proj_values
+    proj_idx = []
+    for i in range(len(proj_dims)):
+        if proj_dims[i] == 1:
+            # we should index with :
+            proj_idx.append(slice(None))
+        else:
+            r = np.linspace(g.min[i], g.max[i], g.pts_each_dim[i])
+            proj_idx.append(np.argmin(np.abs(r - proj_values[i])))
+    
+    # index the set
+    data = data[tuple(proj_idx)]
+    # plot the set. We want lines along where negative switches to positive values
+    # so we want to plot the contour at 0.0. 
+
+    # prepare the dimensions for contour plotting
+    x_dim, y_dim = [i for i in range(len(proj_dims)) if proj_dims[i] == 1]
+    x = np.linspace(g.min[x_dim], g.max[x_dim], g.pts_each_dim[x_dim])
+    y = np.linspace(g.min[y_dim], g.max[y_dim], g.pts_each_dim[y_dim])
+    X, Y = np.meshgrid(x,y)
+
+    # plot the set, contour at 0.0
+    contour = ax.contour(X, Y, data.T, levels=[0.0], colors=color, linestyles=linestyle)
+    # add the text to the center of the data contour. 
+    # We should use the index of the data to find the x and y indices, then index them in x and y
+    # to get the coordinates of the text
+    paths = contour.collections[0].get_paths()  # Get paths for the first contour level
+    if paths:  # Check if there are any paths
+        p = paths[0]  # Use the first path
+        v = p.vertices
+        x_center = np.mean(v[:, 0])
+        y_center = np.mean(v[:, 1])
+        ax.text(x_center, y_center, text, ha='center', va='center')
+    else:
+        pass
+        # print("No contour found for text placement.")
