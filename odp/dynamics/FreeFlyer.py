@@ -9,6 +9,8 @@ import numpy as np
  theta_dot = theta_dot
  theta_ddot = u_w
  """
+# TODO: add mass and inertia to this model
+
 class FreeFlyer:
     def __init__(self, x=[0,0,0,0,0,0], uMin = [-1,-1], uMax = [1,1], 
                  dMin = [-0.25,-0.25], dMax=[0.25,0.25], 

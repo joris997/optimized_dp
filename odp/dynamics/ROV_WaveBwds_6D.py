@@ -179,5 +179,3 @@ class ROV_WaveBwds_6D:
     def Hamiltonian(self, t_deriv, spatial_deriv):
         return t_deriv[0] * spatial_deriv[0] + t_deriv[1] * spatial_deriv[1] + t_deriv[2] * spatial_deriv[2] + t_deriv[3] * spatial_deriv[3] \
                 + t_deriv[4] * spatial_deriv[4] + t_deriv[5] * spatial_deriv[5]
-
-parSum1[0] = (1/(self.m - self.X_udot)) * spat_deriv[2] * self.B[0,0] + (1/(self.m - self.Z_wdot)) * spat_deriv[3] * self.B[1,0]

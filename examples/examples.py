@@ -8,6 +8,7 @@ from odp.dynamics import DubinsCapture
 from odp.dynamics import DubinsCar4D2
 from odp.dynamics import DubinsCar4D
 from odp.dynamics import SAM
+from odp.dynamics import FreeFlyer
 # Plot options
 from odp.Plots import PlotOptions
 # Solver core
@@ -181,32 +182,56 @@ import math
 # # HJSolver(dynamics object, grid, initial value function, time length, system objectives, plotting options)
 # result = HJSolver(my_car, g, [goal, obstacle], tau, compMethods, po2, saveAllTimeSteps=True )
 
-##################################################### EXAMPLE 4 #####################################################
+# ##################################################### EXAMPLE SAM #####################################################
+
+# def ShapeRectangleByCenter(g, center, width):
+#     return ShapeRectangle(g, center - width/2, center + width/2)
+
+
+# g = Grid(np.array([-1,-3,-5,-math.pi]), 
+#          np.array([9,3,5,math.pi]), 4,
+#          np.array([41,41,41,41]), [3])
+# # goal = ShapeRectangleByCenter(g, np.array([7,-2,0,0]), np.array([2,2,2.02,math.pi]))
+# goal = ShapeRectangleByCenter(g, np.array([4,2,0,0]), np.array([2,2,2.02,math.pi]))
+# obs = CylinderShape(g,[2,3],np.array([4,0]),1.0)
+
+# dMax = 1.1
+# # robot = DubinsCar4D(uMin=np.array([-4,-1]),     uMax=np.array([4,1]),
+# #                     dMin=np.array([-dMax,-dMax]), dMax=np.array([dMax,dMax]),
+# #                     uMode="min", dMode="max")
+# robot = SAM(uMin=np.array([-4,-1]),     uMax=np.array([4,1]),
+#             dMin=np.array([-dMax,-dMax]), dMax=np.array([dMax,dMax]),
+#             uMode="min", dMode="max")
+
+# tau = np.arange(start=0, stop=5, step=0.05)
+
+# po2 = PlotOptions(do_plot=True, plot_type="set", plotDims=[0,1,2], slicesCut=[0])
+
+# compMethods = { "TargetSetMode":   "none"}#"minVWithV0"}
+# # HJSolver(dynamics object, grid, initial value function, time length, system objectives, plotting options)
+# result = HJSolver(robot, g, goal, tau, compMethods, po2, saveAllTimeSteps=True )
+
+##################################################### EXAMPLE FREEFLYER #####################################################
 
 def ShapeRectangleByCenter(g, center, width):
     return ShapeRectangle(g, center - width/2, center + width/2)
 
+g = Grid(np.array([-2,-2,-1,-1,-math.pi,-0.5]),
+         np.array([2,2,1,1,math.pi,0.5]), 6,
+         np.array([41,41,21,21,21,21]), [4])
 
-g = Grid(np.array([-1,-3,-5,-math.pi]), 
-         np.array([9,3,5,math.pi]), 4,
-         np.array([41,41,41,41]), [3])
-# goal = ShapeRectangleByCenter(g, np.array([7,-2,0,0]), np.array([2,2,2.02,math.pi]))
-goal = ShapeRectangleByCenter(g, np.array([4,2,0,0]), np.array([2,2,2.02,math.pi]))
-obs = CylinderShape(g,[2,3],np.array([4,0]),1.0)
+goal = ShapeRectangleByCenter(g, np.array([0,0,0,0,0,0]), np.array([0.5,0.5,0.5,0.5,2*math.pi,1.0]))
 
-dMax = 1.1
-# robot = DubinsCar4D(uMin=np.array([-4,-1]),     uMax=np.array([4,1]),
-#                     dMin=np.array([-dMax,-dMax]), dMax=np.array([dMax,dMax]),
-#                     uMode="min", dMode="max")
-robot = SAM(uMin=np.array([-4,-1]),     uMax=np.array([4,1]),
-            dMin=np.array([-dMax,-dMax]), dMax=np.array([dMax,dMax]),
-            uMode="min", dMode="max")
+dMax = 0.0
+robot = FreeFlyer(uMin=np.array([-1,-1]),     uMax=np.array([1,1]),
+                   dMin=np.array([-dMax,-dMax]), dMax=np.array([dMax,dMax]),
+                   uMode="min", dMode="max")
 
-tau = np.arange(start=0, stop=5, step=0.05)
+tau = np.arange(start=0, stop=1, step=0.1)
 
-po2 = PlotOptions(do_plot=True, plot_type="set", plotDims=[0,1,2], slicesCut=[0])
+po3 = PlotOptions(do_plot=False, plot_type="set", plotDims=[0,1], slicesCut=[0,0,0,0])
 
 compMethods = { "TargetSetMode":   "none"}#"minVWithV0"}
-# HJSolver(dynamics object, grid, initial value function, time length, system objectives, plotting options)
-result = HJSolver(robot, g, goal, tau, compMethods, po2, saveAllTimeSteps=True )
+result = HJSolver(robot, g, goal, tau, compMethods, po3, saveAllTimeSteps=False , verbose=True)
 
+print("result.shape: ", result.shape)
