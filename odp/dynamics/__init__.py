@@ -11,3 +11,4 @@ from odp.dynamics.SAM import SAM
 from odp.dynamics.FreeFlyer import FreeFlyer
 from odp.dynamics.SingleIntegrator2D import SingleIntegrator2D
 from odp.dynamics.DoubleIntegrator2D import DoubleIntegrator2D
+from odp.dynamics.kinSAM import kinSAM
