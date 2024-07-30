@@ -181,7 +181,7 @@ class SAM:
                 d2 = self.dMax[1]
         return (d1, d2)
 
-    def dynamics_python(self, state, uOpt, dOpt):
+    def dynamics_inPython(self, state, uOpt, dOpt):
         """
         :param state: tuple of coordinates
         :param uOpt: tuple of optimal control

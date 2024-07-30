@@ -62,7 +62,6 @@ class kinSAM:
         opt_w = hcl.scalar(self.uMax[1], "opt_w")
         # Just create and pass back, even though they're not used
         in3   = hcl.scalar(0, "in3")
-        in4   = hcl.scalar(0, "in4")
 
         # for ease of use
         parSum1 = hcl.scalar(0, "parSum1")
@@ -82,7 +81,7 @@ class kinSAM:
                 opt_w[0] = self.uMin[1]
                 
         # return 3, 4 even if you don't use them
-        return (opt_a[0] ,opt_w[0], in3[0], in4[0])
+        return (opt_a[0] ,opt_w[0], in3[0])
 
     def opt_dstb(self, t, state, spat_deriv):
         """
@@ -94,13 +93,12 @@ class kinSAM:
         d2 = hcl.scalar(self.dMin[1], "d2")
         # Just create and pass back, even though they're not used
         d3 = hcl.scalar(0., "d3")
-        d4 = hcl.scalar(0., "d4")
 
         # for ease of use
         parSum1 = hcl.scalar(0, "parSum1")
         parSum2 = hcl.scalar(0, "parSum2")
-        parSum1[0] = spat_deriv[2] * (self.A_front * hcl.cos(state[3])*hcl.cos(state[3]) + self.A_side * hcl.sin(state[3])*hcl.sin(state[3]))
-        parSum2[0] = spat_deriv[3] * (self.A_front * hcl.sin(state[3])*hcl.sin(state[3]) - self.A_side * hcl.cos(state[3])*hcl.cos(state[3]))
+        parSum1[0] = spat_deriv[0] * (self.A_front * hcl.cos(state[2])*hcl.cos(state[2]) + self.A_side * hcl.sin(state[2])*hcl.sin(state[2]))
+        parSum2[0] = spat_deriv[1] * (self.A_front * hcl.sin(state[2])*hcl.sin(state[2]) - self.A_side * hcl.cos(state[2])*hcl.cos(state[2]))
 
         #with hcl.if_(self.dMode == "max"):
         if self.dMode == "max":
@@ -109,12 +107,12 @@ class kinSAM:
             with hcl.if_(parSum2[0] > 0):
                 d2[0] = self.dMax[1]
         else:
-            with hcl.elif_(parSum1[0] < 0):
+            with hcl.if_(parSum1[0] < 0):
                 d1[0] = self.dMax[0]
-            with hcl.elif_(parSum2[0] < 0):
+            with hcl.if_(parSum2[0] < 0):
                 d2[0] = self.dMax[1]
 
-        return (d1[0], d2[0], d3[0], d4[0])
+        return (d1[0], d2[0], d3[0])
 
     def dynamics(self, t, state, uOpt, dOpt):
         x_dot = hcl.scalar(0, "x_dot")
@@ -173,7 +171,7 @@ class kinSAM:
                 d2 = self.dMax[1]
         return (d1, d2)
 
-    def dynamics_python(self, state, uOpt, dOpt):
+    def dynamics_inPython(self, state, uOpt, dOpt):
         """
         :param state: tuple of coordinates
         :param uOpt: tuple of optimal control
