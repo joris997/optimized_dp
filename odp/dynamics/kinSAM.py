@@ -2,8 +2,8 @@ import heterocl as hcl
 import numpy as np
 
 """ 4D SAM DYNAMICS IMPLEMENTATION 
- x_dot = u_v * cos(theta) + d_1 * (A_front*cos(theta) + A_side*sin(theta))
- y_dot = u_v * sin(theta) + d_2 * (A_front*sin(theta) - A_side*cos(theta))
+ x_dot = u_v * cos(theta) + d_1 * (A_front*cos^2(theta) + A_side*sin^2(theta))
+ y_dot = u_v * sin(theta) + d_2 * (A_front*sin^2(theta) + A_side*cos^2(theta))
  theta_dot = u_theta
  """
 class kinSAM:
@@ -53,9 +53,9 @@ class kinSAM:
         :return:
         """
         # System dynamics
-        # x_dot = u_v * cos(theta) + d_1 * (A_front*cos(theta)**2 + A_side*sin(theta)**2)
-        # y_dot = u_v * sin(theta) + d_2 * (A_front*sin(theta)**2 + A_side*cos(theta)**2)
-        # v_dot = u_theta
+        # x_dot = u_v * cos(theta) + d_1 * (A_front*cos^2(theta) + A_side*sin^2(theta))
+        # y_dot = u_v * sin(theta) + d_2 * (A_front*sin^2(theta) + A_side*cos^2(theta))
+        # theta_dot = u_theta
 
         # Graph takes in 4 possible inputs, by default, for now
         opt_a = hcl.scalar(self.uMax[0], "opt_a")
@@ -97,8 +97,10 @@ class kinSAM:
         # for ease of use
         parSum1 = hcl.scalar(0, "parSum1")
         parSum2 = hcl.scalar(0, "parSum2")
-        parSum1[0] = spat_deriv[0] * (self.A_front * hcl.cos(state[2])*hcl.cos(state[2]) + self.A_side * hcl.sin(state[2])*hcl.sin(state[2]))
-        parSum2[0] = spat_deriv[1] * (self.A_front * hcl.sin(state[2])*hcl.sin(state[2]) - self.A_side * hcl.cos(state[2])*hcl.cos(state[2]))
+        # parSum1[0] = spat_deriv[0] * (self.A_front * hcl.cos(state[2])*hcl.cos(state[2]) + self.A_side * hcl.sin(state[2])*hcl.sin(state[2]))
+        # parSum2[0] = spat_deriv[1] * (self.A_front * hcl.sin(state[2])*hcl.sin(state[2]) + self.A_side * hcl.cos(state[2])*hcl.cos(state[2]))
+        parSum1[0] = spat_deriv[0] * hcl.sqrt((self.A_front**2 * hcl.cos(state[2])*hcl.cos(state[2]) + self.A_side**2 * hcl.sin(state[2])*hcl.sin(state[2])))
+        parSum2[0] = spat_deriv[1] * hcl.sqrt((self.A_front**2 * hcl.sin(state[2])*hcl.sin(state[2]) + self.A_side**2 * hcl.cos(state[2])*hcl.cos(state[2])))
 
         #with hcl.if_(self.dMode == "max"):
         if self.dMode == "max":
@@ -119,8 +121,8 @@ class kinSAM:
         y_dot = hcl.scalar(0, "y_dot")
         theta_dot = hcl.scalar(0, "theta_dot")
 
-        x_dot[0] = uOpt[0] * hcl.cos(state[2]) + dOpt[0]*(self.A_front*(hcl.cos(state[2])*hcl.cos(state[2])) + self.A_side*(hcl.sin(state[2])*hcl.sin(state[2])))
-        y_dot[0] = uOpt[0] * hcl.sin(state[2]) + dOpt[1]*(self.A_front*(hcl.sin(state[2])*hcl.sin(state[2])) + self.A_side*(hcl.cos(state[2])*hcl.cos(state[2])))
+        x_dot[0] = uOpt[0] * hcl.cos(state[2]) + dOpt[0]*hcl.sqrt(self.A_front**2*(hcl.cos(state[2])*hcl.cos(state[2])) + self.A_side**2*(hcl.sin(state[2])*hcl.sin(state[2])))
+        y_dot[0] = uOpt[0] * hcl.sin(state[2]) + dOpt[1]*hcl.sqrt(self.A_front**2*(hcl.sin(state[2])*hcl.sin(state[2])) + self.A_side**2*(hcl.cos(state[2])*hcl.cos(state[2])))
         theta_dot[0] = uOpt[1]
 
         return (x_dot[0], y_dot[0], theta_dot[0])

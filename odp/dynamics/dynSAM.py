@@ -4,14 +4,14 @@ import numpy as np
 """ 4D SAM DYNAMICS IMPLEMENTATION 
  x_dot = x_dot
  y_dot = y_dot
- x_ddot = u_v * cos(theta) + d_1 * (A_front*cos(theta) + A_side*sin(theta))
- y_ddot = u_v * sin(theta) + d_2 * (A_front*sin(theta) - A_side*cos(theta))
  theta_dot = theta_dot
+ x_ddot = u_v * cos(theta) + d_1 * (A_front*cos^2(theta) + A_side*sin^2(theta))
+ y_ddot = u_v * sin(theta) + d_2 * (A_front*sin^2(theta) + A_side*cos^2(theta))
  theta_ddot = u_w
  """
 # TODO: add mass and inertia to this model
 
-class FreeFlyer:
+class dynSAM:
     def __init__(self, x=[0,0,0,0,0,0], uMin = [-1,-1], uMax = [1,1], 
                  dMin = [-0.25,-0.25], dMax=[0.25,0.25], 
                  A_front=0.25, A_side=1.0, 
@@ -60,9 +60,9 @@ class FreeFlyer:
         # System dynamics
         # x_dot = x_dot
         # y_dot = y_dot
-        # x_ddot = u_v * cos(theta) + d_1 * (A_front*cos(theta) + A_side*sin(theta))
-        # y_ddot = u_v * sin(theta) + d_2 * (A_front*sin(theta) - A_side*cos(theta))
         # theta_dot = theta_dot
+        # x_ddot = u_v * cos(theta) + d_1 * (A_front*cos^2(theta) + A_side*sin^2(theta))
+        # y_ddot = u_v * sin(theta) + d_2 * (A_front*sin^2(theta) + A_side*cos^2(theta))
         # theta_ddot = u_w
 
         # Graph takes in 4 possible inputs, by default, for now
@@ -75,7 +75,7 @@ class FreeFlyer:
         # for ease of use
         parSum1 = hcl.scalar(0, "parSum1")
         parSum2 = hcl.scalar(0, "parSum2")
-        parSum1[0] = spat_deriv[2] * hcl.cos(state[3]) + spat_deriv[3] * hcl.sin(state[3])
+        parSum1[0] = spat_deriv[3] * hcl.cos(state[2]) + spat_deriv[4] * hcl.sin(state[2])
         parSum2[0] = spat_deriv[5]
 
         if self.uMode == "max":
@@ -107,8 +107,8 @@ class FreeFlyer:
         # for ease of use
         parSum1 = hcl.scalar(0, "parSum1")
         parSum2 = hcl.scalar(0, "parSum2")
-        parSum1[0] = spat_deriv[2] * (self.A_front * hcl.cos(state[3])*hcl.cos(state[3]) + self.A_side * hcl.sin(state[3])*hcl.sin(state[3]))
-        parSum2[0] = spat_deriv[3] * (self.A_front * hcl.sin(state[3])*hcl.sin(state[3]) - self.A_side * hcl.cos(state[3])*hcl.cos(state[3]))
+        parSum1[0] = spat_deriv[3] * hcl.sqrt(self.A_front**2 * hcl.cos(state[2])*hcl.cos(state[2]) + self.A_side**2 * hcl.sin(state[2])*hcl.sin(state[2]))
+        parSum2[0] = spat_deriv[4] * hcl.sqrt(self.A_front**2 * hcl.sin(state[2])*hcl.sin(state[2]) + self.A_side**2 * hcl.cos(state[2])*hcl.cos(state[2]))
 
         #with hcl.if_(self.dMode == "max"):
         if self.dMode == "max":
@@ -134,12 +134,12 @@ class FreeFlyer:
 
         x_dot[0] = state[0]
         y_dot[0] = state[1]
-        x_ddot[0] = uOpt[0] * hcl.cos(state[3]) + dOpt[0] * (self.A_front * hcl.cos(state[3]) + self.A_side * hcl.sin(state[3]))
-        y_ddot[0] = uOpt[0] * hcl.sin(state[3]) + dOpt[1] * (self.A_front * hcl.sin(state[3]) - self.A_side * hcl.cos(state[3]))
-        theta_dot[0] = state[4]
+        theta_dot[0] = state[2]
+        x_ddot[0] = uOpt[0] * hcl.cos(state[2]) + dOpt[0] * hcl.sqrt(self.A_front**2 * hcl.cos(state[2])*hcl.cos(state[2]) + self.A_side**2 * hcl.sin(state[2])*hcl.sin(state[2]))
+        y_ddot[0] = uOpt[0] * hcl.sin(state[2]) + dOpt[1] * hcl.sqrt(self.A_front**2 * hcl.sin(state[2])*hcl.sin(state[2]) - self.A_side**2 * hcl.cos(state[2])*hcl.cos(state[2]))
         theta_ddot[0] = uOpt[1]
 
-        return (x_dot[0], y_dot[0], x_ddot[0], y_ddot[0] ,theta_dot[0], theta_ddot[0])
+        return (x_dot[0], y_dot[0], theta_dot[0], x_ddot[0], y_ddot[0], theta_ddot[0])
     
     def optCtrl_inPython(self, spat_deriv):
         """

@@ -8,7 +8,7 @@ from odp.dynamics.ROV_WaveBwds_6D import ROV_WaveBwds_6D
 from odp.dynamics.Plane2D import Plane2D
 from odp.dynamics.Plane1D import Plane1D
 from odp.dynamics.SAM import SAM
-from odp.dynamics.FreeFlyer import FreeFlyer
+from odp.dynamics.dynSAM import dynSAM
 from odp.dynamics.SingleIntegrator2D import SingleIntegrator2D
 from odp.dynamics.DoubleIntegrator2D import DoubleIntegrator2D
 from odp.dynamics.kinSAM import kinSAM
