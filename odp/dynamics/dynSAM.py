@@ -9,7 +9,6 @@ import numpy as np
  y_ddot = u_v * sin(theta) + d_2 * (A_front*sin^2(theta) + A_side*cos^2(theta))
  theta_ddot = u_w
  """
-# TODO: add mass and inertia to this model
 
 class dynSAM:
     def __init__(self, x=[0,0,0,0,0,0], uMin = [-1,-1], uMax = [1,1], 

@@ -8,8 +8,10 @@ import numpy as np
  ddy = u_y + d_2
 """
 class DoubleIntegrator2D:
-    def __init__(self, x=[0,0,0,0], uMin = [-1,-1], uMax = [1,1], 
+    def __init__(self, x=[0,0,0,0], 
+                 uMin = [-1,-1], uMax = [1,1], 
                  dMin = [-0.25,-0.25], dMax=[0.25,0.25],
+                 mass = 1.0,
                  uMode="min", dMode="max"):
         """Creates a 2D Double Integrator with the following states:
            X position, Y position
@@ -32,6 +34,8 @@ class DoubleIntegrator2D:
         self.uMin = uMin
         self.dMax = dMax
         self.dMin = dMin
+        self.mass = mass
+        
         assert(uMode in ["min", "max"])
         self.uMode = uMode
         if uMode == "min":
@@ -111,8 +115,8 @@ class DoubleIntegrator2D:
 
         x_dot[0] = state[2]
         y_dot[0] = state[3]
-        x_ddot[0] = uOpt[0] + dOpt[0]
-        y_ddot[0] = uOpt[1] + dOpt[1]
+        x_ddot[0] = (uOpt[0] + dOpt[0])/self.mass
+        y_ddot[0] = (uOpt[1] + dOpt[1])/self.mass
 
         return (x_dot[0], y_dot[0], x_ddot[0], y_ddot[0])
     
@@ -179,6 +183,6 @@ class DoubleIntegrator2D:
         """
         x_dot = state[2]
         y_dot = state[3]
-        x_ddot = uOpt[0] + dOpt[0]
-        y_ddot = uOpt[1] + dOpt[1]
+        x_ddot = (uOpt[0] + dOpt[0])/self.mass
+        y_ddot = (uOpt[1] + dOpt[1])/self.mass
         return (x_dot, y_dot, x_ddot, y_ddot)
