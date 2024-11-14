@@ -12,3 +12,4 @@ from odp.dynamics.dynSAM import dynSAM
 from odp.dynamics.SingleIntegrator2D import SingleIntegrator2D
 from odp.dynamics.DoubleIntegrator2D import DoubleIntegrator2D
 from odp.dynamics.kinSAM import kinSAM
+from odp.dynamics.DoubleIntegrator1D import DoubleIntegrator1D
